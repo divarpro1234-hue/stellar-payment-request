@@ -1,11 +1,10 @@
-import { existsSync } from 'node:fs';
-import { loadEnvFile } from 'node:process';
+import { ConfigService } from '@nestjs/config';
 import { createApp } from './app';
 
 async function bootstrap() {
-  if (existsSync('.env')) loadEnvFile('.env');
   const app = await createApp();
-  await app.listen(Number(process.env.PORT ?? 3001));
+  const configService = app.get(ConfigService);
+  await app.listen(configService.get<number>('PORT', 3001));
 }
 
 bootstrap().catch((error: unknown) => {

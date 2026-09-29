@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createApp } from '../dist/app.js';
 
+globalThis.process.env.DATABASE_URL ??=
+  'postgresql://postgres:postgres@localhost:5432/stellar_test';
+
 test('GET /api/v1/health returns HTTP 200 and ok', async () => {
   const app = await createApp();
   try {

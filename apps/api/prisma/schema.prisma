@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model PaymentRequest {
+  id                  String               @id @default(uuid()) @db.Uuid
+  requestHash         String               @unique
+  destinationHash     String
+  assetCode           String
+  assetIssuer         String?
+  amount              Decimal              @db.Decimal(65, 7)
+  memoType            String
+  memoHash            String?
+  network             String
+  trustlineStatus     String
+  createdAt           DateTime             @default(now())
+  onchainRegistration OnchainRegistration?
+}
+
+model OnchainRegistration {
+  id               String         @id @default(uuid()) @db.Uuid
+  paymentRequestId String         @unique @db.Uuid
+  paymentRequest   PaymentRequest @relation(fields: [paymentRequestId], references: [id])
+  contractId       String
+  registrant       String
+  txHash           String?
+  status           String
+  ledgerSequence   BigInt?
+  registeredAt     DateTime?
+  createdAt        DateTime       @default(now())
+}
+
+model MarketPriceCache {
+  pair      String   @unique
+  price     Decimal
+  source    String
+  fetchedAt DateTime
+  expiresAt DateTime
+}
+
+model AssetCatalog {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String
+  issuer      String?
+  displayName String
+  network     String
+  isNative    Boolean
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@unique([code, issuer, network])
+}

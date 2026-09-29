@@ -3,6 +3,7 @@ node_modules/
 .next/
 out/
 dist/
+apps/api/src/generated/prisma/
 coverage/
 *.tsbuildinfo
 next-env.d.ts
