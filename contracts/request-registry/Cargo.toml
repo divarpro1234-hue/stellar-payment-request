@@ -1,0 +1,19 @@
+[package]
+name = "request-registry"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+# Add soroban-sdk when contract implementation begins.
+[dependencies]
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+strip = "symbols"
+lto = true
+codegen-units = 1
+panic = "abort"
