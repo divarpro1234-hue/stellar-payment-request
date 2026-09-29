@@ -11,6 +11,7 @@ interface ErrorResponse {
   statusCode: number;
   error: string;
   message: string | string[];
+  code?: string;
   timestamp: string;
   path: string;
 }
@@ -18,6 +19,7 @@ interface ErrorResponse {
 interface NestErrorBody {
   error?: string;
   message?: string | string[];
+  code?: string;
 }
 
 interface HttpRequest {
@@ -52,6 +54,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       statusCode,
       error: normalized.error,
       message: normalized.message,
+      ...(normalized.code ? { code: normalized.code } : {}),
       timestamp: new Date().toISOString(),
       path: request.originalUrl,
     };
@@ -62,7 +65,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private normalizeBody(
     body: string | object | undefined,
     statusCode: number,
-  ): Pick<ErrorResponse, 'error' | 'message'> {
+  ): Pick<ErrorResponse, 'error' | 'message' | 'code'> {
     const fallbackError = HttpStatus[statusCode] ?? 'Internal Server Error';
 
     if (typeof body === 'string') {
@@ -74,6 +77,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return {
         error: nestBody.error ?? fallbackError,
         message: nestBody.message ?? fallbackError,
+        ...(nestBody.code ? { code: nestBody.code } : {}),
       };
     }
 

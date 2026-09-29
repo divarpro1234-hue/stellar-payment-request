@@ -42,7 +42,7 @@ export function isValidAsset({
   assetIssuer,
 }: StellarAsset): boolean {
   if (assetCode === NATIVE_ASSET_CODE) {
-    return true;
+    return assetIssuer === undefined;
   }
 
   return assetIssuer !== undefined && isValidStellarAccount(assetIssuer);

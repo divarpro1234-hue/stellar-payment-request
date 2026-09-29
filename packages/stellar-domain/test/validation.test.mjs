@@ -61,4 +61,5 @@ test('requires a valid issuer for non-XLM assets', () => {
 
 test('recognizes XLM as the native asset', () => {
   assert.equal(isValidAsset({ assetCode: 'XLM' }), true);
+  assert.equal(isValidAsset({ assetCode: 'XLM', assetIssuer: issuer }), false);
 });

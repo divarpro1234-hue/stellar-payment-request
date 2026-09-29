@@ -11,7 +11,6 @@ test('builds a public XLM payment without asset or network parameters', () => {
       destination,
       amount: '10.1234567',
       assetCode: 'XLM',
-      assetIssuer: issuer,
       network: 'PUBLIC',
     }),
     `web+stellar:pay?destination=${destination}&amount=10.1234567`,
