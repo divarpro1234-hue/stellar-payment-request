@@ -6,6 +6,7 @@ import jsQR from 'jsqr';
 import pngjs from 'pngjs';
 import { createApp } from '../dist/app.js';
 import { PrismaService } from '../dist/database/prisma.service.js';
+import { HorizonClient } from '../dist/trustlines/horizon.client.js';
 
 const { PNG } = pngjs;
 const destination = 'GDWUSKGGFDI4FRXK5EBTRECZSVQSSWJHHJOGH6JWG3AUMFFMQ435DIAG';
@@ -61,14 +62,61 @@ test('creates a request and returns a QR decoding to the exact SEP-7 URI', async
     assert.equal(body.network, 'TESTNET');
     assert.equal(body.requestId, 'integration-request-id');
     assert.equal(body.requestHash, hash(body.uri));
-    assert.equal(body.trustline, null);
-    assert.ok(Array.isArray(body.warnings));
+    assert.deepEqual(body.trustline, {
+      account: destination,
+      assetCode: 'XLM',
+      required: false,
+      exists: true,
+      authorized: true,
+    });
+    assert.deepEqual(body.warnings, []);
     assert.equal(savedData.destinationHash, hash(destination));
     assert.equal(savedData.memoHash, hash('invoice 42'));
     assert.equal('destination' in savedData, false);
     assert.equal('memo' in savedData, false);
   } finally {
     paymentRequestDelegate.create = originalCreate;
+    await app.close();
+  }
+});
+
+test('warns on a missing issued-asset trustline without changing the SEP-7 URI', async () => {
+  const app = await createApp();
+  const prisma = app.get(PrismaService);
+  const paymentRequestDelegate = prisma.paymentRequest;
+  const originalCreate = paymentRequestDelegate.create;
+  const horizonClient = app.get(HorizonClient);
+  const originalGetAccount = horizonClient.getAccount;
+
+  paymentRequestDelegate.create = async () => ({ id: 'missing-trustline-id' });
+  horizonClient.getAccount = async () => ({ balances: [] });
+
+  try {
+    await app.listen(0, '127.0.0.1');
+    const response = await globalThis.fetch(
+      `${await app.getUrl()}/api/v1/payment-requests`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          destination,
+          assetCode: 'USDC',
+          assetIssuer:
+            'GDFJHLAXAUMHA4OWPOB4P7YO72AQR2HMIUYFOXLXE2DZGM633K7HZDQP',
+          amount: '2',
+        }),
+      },
+    );
+    const body = await response.json();
+
+    assert.equal(response.status, 201);
+    assert.deepEqual(body.warnings, ['MISSING_TRUSTLINE']);
+    assert.equal(body.trustline.exists, false);
+    assert.match(body.uri, /^web\+stellar:pay\?/);
+    assert.doesNotMatch(body.uri, /trustline/i);
+  } finally {
+    paymentRequestDelegate.create = originalCreate;
+    horizonClient.getAccount = originalGetAccount;
     await app.close();
   }
 });

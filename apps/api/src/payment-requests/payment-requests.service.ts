@@ -19,6 +19,15 @@ import type {
 } from '@stellar-payment-request/stellar-domain';
 import QRCode from 'qrcode';
 import { PrismaService } from '../database/prisma.service';
+import {
+  HorizonAccountNotFoundError,
+  HorizonUnavailableError,
+} from '../trustlines/horizon.client';
+import type {
+  PaymentRequestTrustlineWarning,
+  TrustlineResult,
+} from '../trustlines/trustline.types';
+import { TrustlinesService } from '../trustlines/trustlines.service';
 import { CreatePaymentRequestDto } from './create-payment-request.dto';
 
 interface PaymentRequestResponse {
@@ -27,8 +36,8 @@ interface PaymentRequestResponse {
   uri: string;
   qrDataUrl: string;
   requestHash: string;
-  trustline: null;
-  warnings: string[];
+  trustline: TrustlineResult | null;
+  warnings: PaymentRequestTrustlineWarning[];
 }
 
 type PaymentRequestErrorCode =
@@ -53,6 +62,7 @@ export class PaymentRequestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly trustlinesService: TrustlinesService,
   ) {}
 
   async create(dto: CreatePaymentRequestDto): Promise<PaymentRequestResponse> {
@@ -76,6 +86,7 @@ export class PaymentRequestsService {
     const requestHash = sha256(uri);
     const destinationHash = sha256(dto.destination);
     const memoHash = dto.memo === undefined ? null : sha256(dto.memo);
+    const { trustline, warnings } = await this.checkTrustline(dto);
     const qrDataUrl = await QRCode.toDataURL(uri, {
       errorCorrectionLevel: 'M',
       type: 'image/png',
@@ -90,7 +101,7 @@ export class PaymentRequestsService {
         memoType: dto.memoType ?? 'NONE',
         memoHash,
         network,
-        trustlineStatus: 'UNKNOWN',
+        trustlineStatus: this.getTrustlineStatus(trustline),
       },
       select: { id: true },
     });
@@ -101,9 +112,61 @@ export class PaymentRequestsService {
       uri,
       qrDataUrl,
       requestHash,
-      trustline: null,
-      warnings: ['Trustline status has not been checked.'],
+      trustline,
+      warnings,
     };
+  }
+
+  private async checkTrustline(dto: CreatePaymentRequestDto): Promise<{
+    trustline: TrustlineResult | null;
+    warnings: PaymentRequestTrustlineWarning[];
+  }> {
+    try {
+      const trustline = await this.trustlinesService.check({
+        account: dto.destination,
+        assetCode: dto.assetCode,
+        ...(dto.assetIssuer === undefined
+          ? {}
+          : { assetIssuer: dto.assetIssuer }),
+      });
+
+      if (!trustline.required || trustline.authorized) {
+        return { trustline, warnings: [] };
+      }
+
+      return {
+        trustline,
+        warnings: [
+          trustline.exists ? 'UNAUTHORIZED_TRUSTLINE' : 'MISSING_TRUSTLINE',
+        ],
+      };
+    } catch (error) {
+      if (error instanceof HorizonAccountNotFoundError) {
+        return { trustline: null, warnings: ['ACCOUNT_NOT_FOUND'] };
+      }
+
+      if (error instanceof HorizonUnavailableError) {
+        return { trustline: null, warnings: ['TRUSTLINE_CHECK_UNAVAILABLE'] };
+      }
+
+      throw error;
+    }
+  }
+
+  private getTrustlineStatus(trustline: TrustlineResult | null): string {
+    if (!trustline) {
+      return 'UNKNOWN';
+    }
+
+    if (!trustline.required) {
+      return 'NOT_REQUIRED';
+    }
+
+    if (!trustline.exists) {
+      return 'MISSING';
+    }
+
+    return trustline.authorized ? 'AUTHORIZED' : 'UNAUTHORIZED';
   }
 
   private validate(dto: CreatePaymentRequestDto): void {

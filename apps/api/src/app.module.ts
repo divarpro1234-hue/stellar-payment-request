@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { HealthController } from './health.controller';
 import { PaymentRequestsModule } from './payment-requests/payment-requests.module';
+import { TrustlinesModule } from './trustlines/trustlines.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { PaymentRequestsModule } from './payment-requests/payment-requests.modul
     }),
     DatabaseModule,
     PaymentRequestsModule,
+    TrustlinesModule,
   ],
   controllers: [HealthController],
 })
