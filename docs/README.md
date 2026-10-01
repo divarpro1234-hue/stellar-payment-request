@@ -11,6 +11,10 @@ El backend requiere `SOROBAN_RPC_URL`, `SOROBAN_CONTRACT_ID` y
 `STELLAR_NETWORK=testnet` (o `public`). NestJS no contiene claves privadas,
 no usa `Keypair.fromSecret`, no firma ni altera firmas.
 
+La app web usa `NEXT_PUBLIC_API_URL` como origen del backend (por ejemplo,
+`http://localhost:3001`). Si `FRONTEND_ORIGIN` no está configurado, la API
+permite por defecto el origen local `http://localhost:3000`.
+
 Flujo de firma no custodial:
 
 Backend prepara XDR

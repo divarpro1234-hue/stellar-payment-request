@@ -10,10 +10,13 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 export async function createApp() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  const frontendOrigin = configService.get<string>('FRONTEND_ORIGIN');
+  const frontendOrigin = configService.get<string>(
+    'FRONTEND_ORIGIN',
+    'http://localhost:3000',
+  );
 
   app.use(helmet({ contentSecurityPolicy: false }));
-  app.enableCors({ origin: frontendOrigin ?? false });
+  app.enableCors({ origin: frontendOrigin });
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({

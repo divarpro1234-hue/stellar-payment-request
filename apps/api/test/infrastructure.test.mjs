@@ -42,3 +42,30 @@ test('configures Swagger, Helmet, CORS and uniform HTTP errors', async () => {
     await app.close();
   }
 });
+
+test('allows the local Next.js origin when FRONTEND_ORIGIN is unset', async () => {
+  const configuredOrigin = globalThis.process.env.FRONTEND_ORIGIN;
+  delete globalThis.process.env.FRONTEND_ORIGIN;
+  const app = await createApp();
+
+  try {
+    await app.listen(0, '127.0.0.1');
+    const response = await globalThis.fetch(
+      `${await app.getUrl()}/api/v1/health`,
+      {
+        headers: { Origin: 'http://localhost:3000' },
+      },
+    );
+    assert.equal(
+      response.headers.get('access-control-allow-origin'),
+      'http://localhost:3000',
+    );
+  } finally {
+    if (configuredOrigin === undefined) {
+      delete globalThis.process.env.FRONTEND_ORIGIN;
+    } else {
+      globalThis.process.env.FRONTEND_ORIGIN = configuredOrigin;
+    }
+    await app.close();
+  }
+});
