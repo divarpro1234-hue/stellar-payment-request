@@ -62,7 +62,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       : this.normalizeBody(body, statusCode);
 
     if (!isHttpException && !isUniqueConstraintError) {
-      this.logger.error('Unhandled request error', exception);
+      this.logger.error('Unhandled request error');
     }
 
     const payload: ErrorResponse = {

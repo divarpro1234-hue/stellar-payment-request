@@ -5,6 +5,8 @@ out/
 dist/
 apps/api/src/generated/prisma/
 coverage/
+playwright-report/
+test-results/
 *.tsbuildinfo
 next-env.d.ts
 .env
@@ -13,5 +15,6 @@ next-env.d.ts
 *.log
 .vercel/
 target/
+contracts/request-registry/test_snapshots/
 .DS_Store
 Thumbs.db

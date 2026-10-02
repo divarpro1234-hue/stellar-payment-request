@@ -6,3 +6,8 @@ onlyBuiltDependencies:
   - '@nestjs/core'
   - sharp
   - unrs-resolver
+overrides:
+  deepmerge-ts@<8.0.0: '>=8.0.0'
+  js-yaml@>=5.0.0 <=5.4.0: '>=5.4.1'
+  mysql2@<3.22.0: '>=3.22.0'
+  mysql2@<=3.23.0: '>=3.23.1'

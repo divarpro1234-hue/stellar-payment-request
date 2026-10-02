@@ -193,6 +193,23 @@ test('prepares registration at the initial account sequence plus one after simul
   assert.equal(account.sequenceNumber(), '42');
 });
 
+test('rejects request hashes that are not 32-byte hexadecimal values', async () => {
+  const rpcClient = makeRpcClient();
+  let simulationCalled = false;
+  rpcClient.getServer = () => ({
+    simulateTransaction: async () => {
+      simulationCalled = true;
+      return { result: { retval: xdr.ScVal.scvBool(false) } };
+    },
+  });
+
+  await assert.rejects(
+    rpcClient.isRegistered(new Account(registrant, '41'), 'g'.repeat(64)),
+    /64-character hexadecimal value/,
+  );
+  assert.equal(simulationCalled, false);
+});
+
 test('rejects an invalid registrant before calling Soroban RPC', async () => {
   let rpcCalled = false;
   const { service } = makeService({

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createApp } from '../dist/app.js';
+import { AllExceptionsFilter } from '../dist/common/filters/all-exceptions.filter.js';
 
 globalThis.process.env.DATABASE_URL ??=
   'postgresql://postgres:postgres@localhost:5432/stellar_test';
@@ -68,4 +69,41 @@ test('allows the local Next.js origin when FRONTEND_ORIGIN is unset', async () =
     }
     await app.close();
   }
+});
+
+test('does not log or return exception details that could contain payment data', () => {
+  const filter = new AllExceptionsFilter();
+  const logged = [];
+  const destination =
+    'GDWUSKGGFDI4FRXK5EBTRECZSVQSSWJHHJOGH6JWG3AUMFFMQ435DIAG';
+  let statusCode;
+  let body;
+  filter.logger.error = (...args) => logged.push(args);
+  const response = {
+    status(code) {
+      statusCode = code;
+      return this;
+    },
+    json(payload) {
+      body = payload;
+    },
+  };
+  const host = {
+    switchToHttp: () => ({
+      getRequest: () => ({ originalUrl: '/api/v1/test' }),
+      getResponse: () => response,
+    }),
+  };
+
+  filter.catch(
+    new Error(`Failed for ${destination} with memo invoice 42`),
+    host,
+  );
+
+  assert.equal(statusCode, 500);
+  assert.equal(body.message, 'Internal server error');
+  assert.equal('stack' in body, false);
+  assert.deepEqual(logged, [['Unhandled request error']]);
+  assert.doesNotMatch(JSON.stringify(body), /invoice 42|GDWUSK/);
+  assert.doesNotMatch(JSON.stringify(logged), /invoice 42|GDWUSK/);
 });

@@ -192,6 +192,10 @@ export class SorobanRpcClient {
   }
 
   private hashToScVal(requestHash: string): xdr.ScVal {
+    if (!/^[\da-f]{64}$/i.test(requestHash)) {
+      throw new Error('Request hash must be a 64-character hexadecimal value.');
+    }
+
     return xdr.ScVal.scvBytes(Buffer.from(requestHash, 'hex'));
   }
 

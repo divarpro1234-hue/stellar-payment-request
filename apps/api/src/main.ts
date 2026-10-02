@@ -8,6 +8,10 @@ async function bootstrap() {
 }
 
 bootstrap().catch((error: unknown) => {
-  console.error(error);
+  if (process.env.NODE_ENV === 'production') {
+    console.error('Application failed to start.');
+  } else {
+    console.error(error);
+  }
   process.exitCode = 1;
 });
