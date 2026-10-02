@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { resolve } from 'node:path';
 import { CalculatorModule } from './calculator/calculator.module';
 import { DatabaseModule } from './database/database.module';
 import { HealthController } from './health.controller';
@@ -13,7 +14,7 @@ import { TrustlinesModule } from './trustlines/trustlines.module';
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,
-      envFilePath: ['.env', '../../.env'],
+      envFilePath: resolve(__dirname, '../../../.env'),
     }),
     DatabaseModule,
     MarketDataModule,

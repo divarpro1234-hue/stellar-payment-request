@@ -1,68 +1,90 @@
-# Generador de solicitud de pago para Stellar
+# Stellar Desk
 
-Proyecto académico no custodial. Este módulo crea únicamente la estructura del
-monorepo; no implementa pagos, SEP-7, autenticación ni conexión con wallets.
-Nunca se deben recibir ni almacenar claves privadas Stellar, secret seeds o
-frases semilla, incluyendo archivos, variables de entorno, base de datos y logs.
+Aplicación académica no custodial para crear solicitudes SEP-7 de Stellar,
+comprobar trustlines, consultar una referencia XLM/USD y registrar una huella
+SHA-256 en Soroban Testnet. La aplicación no recibe ni almacena claves privadas,
+no firma transacciones y no procesa ni garantiza pagos.
 
-## Requisitos e instalación
+## Equipo
 
-- Node.js 22.14 o superior (recomendado: Node.js 24 LTS).
-- pnpm 10.32.1, fijado en `packageManager`.
+| Integrante | Rol                      |
+| ---------- | ------------------------ |
+| Johnnathan | Integración técnica      |
+| Álvaro     | Integración técnica      |
+| Divar      | Integración técnica      |
+| Sebastián  | Diseño de flujo          |
+| Yojana     | Normativo y presentación |
 
-```sh
-corepack enable
-pnpm install --frozen-lockfile
-pnpm dev
+## Stack
+
+- Web: Next.js App Router, React, TypeScript y Playwright.
+- API: NestJS, Prisma ORM 7, Neon PostgreSQL y `@prisma/adapter-neon`.
+- Dominio: package TypeScript `@stellar-payment-request/stellar-domain`.
+- Blockchain: Soroban Testnet, contrato Rust con `soroban-sdk 28.0.0`.
+- Datos externos: Horizon y Soroban RPC Testnet; CoinGecko keyless.
+- Despliegue previsto: Vercel Hobby para web y API, Neon Free.
+
+## Ejecución local
+
+Requisitos: Node.js 22.14 o superior, Corepack, Rust con `wasm32v1-none` y
+Stellar CLI 28.1.0 para compilar/desplegar el contrato. El repositorio fija
+`pnpm@10.32.1`. En Windows, usa `corepack pnpm` si pnpm no aparece en `PATH`.
+
+Hay un solo archivo de entorno local: copia `.env.example` a `.env` en la raíz
+del repositorio y completa las URLs de Neon. No crees `apps/api/.env` ni subas
+`.env` a Git. NestJS y Prisma CLI resuelven explícitamente ese `.env` raíz; en
+Vercel las variables se configuran en los dashboards de los proyectos.
+
+```powershell
+Copy-Item .env.example .env
+corepack pnpm install --frozen-lockfile
+corepack pnpm --filter @stellar-payment-request/web exec playwright install chromium
+corepack pnpm dev
 ```
 
-Si pnpm no está en PATH, se puede usar `corepack pnpm` en lugar de `pnpm`.
-Si `corepack enable` requiere permisos globales, después de instalar las
-dependencias ejecutar `corepack enable --install-directory node_modules/.bin pnpm`
-para que los scripts internos también encuentren pnpm sin instalación global.
-Web: http://localhost:3000. API: http://localhost:3001/api/v1/health.
-El endpoint devuelve `{"status":"ok"}`.
+Web: <http://localhost:3000>. API health: <http://localhost:3001/api/v1/health>.
+Swagger: <http://localhost:3001/api/docs>.
 
-La configuración predeterminada no requiere variables de entorno. Para cambiar
-el puerto de la API, copiar `.env.example` a `apps/api/.env` y ajustar `PORT`.
-
-## Comandos
-
-| Comando       | Función                                             |
-| ------------- | --------------------------------------------------- |
-| `pnpm dev`    | Inicia Next.js y NestJS en modo desarrollo          |
-| `pnpm build`  | Compila las aplicaciones y el paquete compartido    |
-| `pnpm lint`   | Ejecuta ESLint y comprueba el formato con Prettier  |
-| `pnpm test`   | Compila la API y verifica el endpoint HTTP de salud |
-| `pnpm format` | Aplica Prettier                                     |
-
-Web y dominio todavía no contienen pruebas; `test` ejecuta las pruebas existentes.
-
-## Estructura
-
-```text
-apps/
-  web/                       Next.js, App Router y TypeScript
-  api/                       NestJS y TypeScript
-packages/
-  stellar-domain/            Paquete vacío para reglas compartidas
-contracts/
-  request-registry/          Esqueleto Rust para Soroban
-docs/                        Documentación
-scripts/                     Automatizaciones futuras
+```powershell
+corepack pnpm lint
+corepack pnpm test
+corepack pnpm build
+Push-Location contracts/request-registry; cargo test; Pop-Location
 ```
 
-TypeScript comparte las opciones estrictas de `tsconfig.base.json`; cada paquete
-configura su compilación. ESLint usa configuración plana y Prettier controla el
-formato. Las dependencias quedan registradas en `pnpm-lock.yaml` para GitHub.
+`pnpm test` incluye Vitest, pruebas Node del API/dominio y E2E Playwright con
+respuestas mock; no requiere Testnet, Horizon ni CoinGecko.
 
-## Módulos posteriores
+## Contrato Testnet
 
-PostgreSQL con Prisma, reglas Stellar, SEP-7, integración con wallets y contrato
-Soroban se implementarán más adelante. No se instalan esas dependencias ahora.
-Vercel es el destino final previsto; el despliegue de web y API y su configuración
-se abordarán en el módulo correspondiente. No se ha creado un repositorio remoto.
+- Contract ID: `CBUOOQIOVHRV7HEC7KOCT6SQLM6HHPCOMDG233VLVXEDVREGLOXXKXYZ`.
+- WASM SHA-256: `f9c77c8ccd4982463d17381d30de5eda37dd9c5680c55a2e4205d32af7e05084`.
+- Contrato en Stellar Expert: [RequestRegistry en Testnet](https://stellar.expert/explorer/testnet/contract/CBUOOQIOVHRV7HEC7KOCT6SQLM6HHPCOMDG233VLVXEDVREGLOXXKXYZ).
+- Subida WASM: [transacción `39642f…d627ea`](https://stellar.expert/explorer/testnet/tx/39642f020c201430041e848a471b5db82ebde2bca127e19a41b67786d9d627ea).
+- Creación del contrato: [transacción `02e522…471d6`](https://stellar.expert/explorer/testnet/tx/02e522c8851af55cff1710cdf826f538cff4b62bb1d4d623fa9e7613520471d6).
+- Registro SUCCESS actual: [transacción `07c780…794ef5`, ledger 4978095](https://stellar.expert/explorer/testnet/tx/07c7805d72e545e9ff3f2bda9c874764024c59b5a50713dbb3d1d78cf9794ef5).
 
-Referencias oficiales para esta estructura:
-[Next.js](https://nextjs.org/docs/app/getting-started/installation) y
-[NestJS](https://docs.nestjs.com/first-steps).
+Testnet se reinicia periódicamente: el ID anterior puede dejar de estar
+disponible. El procedimiento de redespliegue y la actualización de ID están en
+[Despliegue](docs/deployment.md). El estado SUCCESS reportado en ledger 4078095
+es histórico y no corresponde a una llamada `register` del contrato desplegado
+el 2026-10-02. La prueba del contrato actual es el registro en ledger 4978095.
+Consulta [Soroban](docs/soroban.md) para los detalles.
+
+## Documentación
+
+- [Arquitectura](docs/architecture.md)
+- [API](docs/api.md)
+- [SEP-7](docs/sep7.md)
+- [Contrato Soroban y datos de despliegue](docs/soroban.md)
+- [Preparación de despliegue](docs/deployment.md)
+- [Guía de demostración](docs/demo-guide.md)
+- [QA, seguridad y pruebas](QA_REPORT.md)
+
+## Principios del demo
+
+- Usa la expresión “wallets compatibles con SEP-7”, no “cualquier wallet”.
+- El contrato registra una huella verificable; no procesa ni garantiza el pago.
+- Un hash es una huella determinista, no cifrado ni anonimización reversible.
+- La secret del deployer vive solo en el equipo del operador y nunca en el
+  servidor, Vercel, variables de proyecto o repositorio.

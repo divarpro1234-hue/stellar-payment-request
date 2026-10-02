@@ -1,5 +1,8 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import { resolve } from 'node:path';
 import { defineConfig } from 'prisma/config';
+
+dotenv.config({ path: resolve(__dirname, '../../.env') });
 
 const fallbackUrl = 'postgresql://postgres:postgres@localhost:5432/stellar';
 
