@@ -62,14 +62,12 @@ respuestas mock; no requiere Testnet, Horizon ni CoinGecko.
 - Contrato en Stellar Expert: [RequestRegistry en Testnet](https://stellar.expert/explorer/testnet/contract/CBUOOQIOVHRV7HEC7KOCT6SQLM6HHPCOMDG233VLVXEDVREGLOXXKXYZ).
 - Subida WASM: [transacción `39642f…d627ea`](https://stellar.expert/explorer/testnet/tx/39642f020c201430041e848a471b5db82ebde2bca127e19a41b67786d9d627ea).
 - Creación del contrato: [transacción `02e522…471d6`](https://stellar.expert/explorer/testnet/tx/02e522c8851af55cff1710cdf826f538cff4b62bb1d4d623fa9e7613520471d6).
-- Registro SUCCESS actual: [transacción `07c780…794ef5`, ledger 4978095](https://stellar.expert/explorer/testnet/tx/07c7805d72e545e9ff3f2bda9c874764024c59b5a50713dbb3d1d78cf9794ef5).
+- Registro de prueba con estado SUCCESS en Testnet, ledger 4978095: [transacción `07c780…794ef5`](https://stellar.expert/explorer/testnet/tx/07c7805d72e545e9ff3f2bda9c874764024c59b5a50713dbb3d1d78cf9794ef5).
 
 Testnet se reinicia periódicamente: el ID anterior puede dejar de estar
 disponible. El procedimiento de redespliegue y la actualización de ID están en
-[Despliegue](docs/deployment.md). El estado SUCCESS reportado en ledger 4078095
-es histórico y no corresponde a una llamada `register` del contrato desplegado
-el 2026-10-02. La prueba del contrato actual es el registro en ledger 4978095.
-Consulta [Soroban](docs/soroban.md) para los detalles.
+[Despliegue](docs/deployment.md). Consulta [Soroban](docs/soroban.md) para los
+detalles del contrato.
 
 ## Documentación
 

@@ -32,9 +32,7 @@
 
 ## Plan B
 
-Si Testnet, Freighter, Neon o CoinGecko fallan, enseña el [registro actual
-SUCCESS en ledger 4978095](https://stellar.expert/explorer/testnet/tx/07c7805d72e545e9ff3f2bda9c874764024c59b5a50713dbb3d1d78cf9794ef5),
+Si Testnet, Freighter, Neon o CoinGecko fallan, enseña el Registro de prueba con
+estado SUCCESS en Testnet, ledger 4978095:
+[transacción `07c780…794ef5`](https://stellar.expert/explorer/testnet/tx/07c7805d72e545e9ff3f2bda9c874764024c59b5a50713dbb3d1d78cf9794ef5),
 el contrato actual en Stellar Expert, las capturas preparadas y `QA_REPORT.md`.
-Aclara qué parte es evidencia histórica y qué parte no se ejecutó durante la
-demo. El ledger `4078095` es histórico y no corresponde a `register` del
-contrato actual.

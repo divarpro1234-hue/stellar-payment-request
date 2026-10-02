@@ -2,31 +2,20 @@
 
 ## Contrato desplegado
 
-| Dato                                 | Valor                                                                                                                                                                                                |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Contract ID actual                   | `CBUOOQIOVHRV7HEC7KOCT6SQLM6HHPCOMDG233VLVXEDVREGLOXXKXYZ`                                                                                                                                           |
-| WASM SHA-256 completo                | `f9c77c8ccd4982463d17381d30de5eda37dd9c5680c55a2e4205d32af7e05084`                                                                                                                                   |
-| Subida del WASM                      | [tx `39642f020c201430041e848a471b5db82ebde2bca127e19a41b67786d9d627ea`](https://stellar.expert/explorer/testnet/tx/39642f020c201430041e848a471b5db82ebde2bca127e19a41b67786d9d627ea)                 |
-| Creación del contrato                | [tx `02e522c8851af55cff1710cdf826f538cff4b62bb1d4d623fa9e7613520471d6`](https://stellar.expert/explorer/testnet/tx/02e522c8851af55cff1710cdf826f538cff4b62bb1d4d623fa9e7613520471d6)                 |
-| Registro SUCCESS del contrato actual | [tx `07c7805d72e545e9ff3f2bda9c874764024c59b5a50713dbb3d1d78cf9794ef5`, ledger 4978095](https://stellar.expert/explorer/testnet/tx/07c7805d72e545e9ff3f2bda9c874764024c59b5a50713dbb3d1d78cf9794ef5) |
-| Contract explorer                    | [Stellar Expert, Testnet](https://stellar.expert/explorer/testnet/contract/CBUOOQIOVHRV7HEC7KOCT6SQLM6HHPCOMDG233VLVXEDVREGLOXXKXYZ)                                                                 |
-| SDK Rust                             | `soroban-sdk 28.0.0`                                                                                                                                                                                 |
-| Stellar CLI                          | `28.1.0`                                                                                                                                                                                             |
+| Dato                                                             | Valor                                                                                                                                                                                |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Contract ID actual                                               | `CBUOOQIOVHRV7HEC7KOCT6SQLM6HHPCOMDG233VLVXEDVREGLOXXKXYZ`                                                                                                                           |
+| WASM SHA-256 completo                                            | `f9c77c8ccd4982463d17381d30de5eda37dd9c5680c55a2e4205d32af7e05084`                                                                                                                   |
+| Subida del WASM                                                  | [tx `39642f020c201430041e848a471b5db82ebde2bca127e19a41b67786d9d627ea`](https://stellar.expert/explorer/testnet/tx/39642f020c201430041e848a471b5db82ebde2bca127e19a41b67786d9d627ea) |
+| Creación del contrato                                            | [tx `02e522c8851af55cff1710cdf826f538cff4b62bb1d4d623fa9e7613520471d6`](https://stellar.expert/explorer/testnet/tx/02e522c8851af55cff1710cdf826f538cff4b62bb1d4d623fa9e7613520471d6) |
+| Registro de prueba con estado SUCCESS en Testnet, ledger 4978095 | [tx `07c7805d72e545e9ff3f2bda9c874764024c59b5a50713dbb3d1d78cf9794ef5`](https://stellar.expert/explorer/testnet/tx/07c7805d72e545e9ff3f2bda9c874764024c59b5a50713dbb3d1d78cf9794ef5) |
+| Contract explorer                                                | [Stellar Expert, Testnet](https://stellar.expert/explorer/testnet/contract/CBUOOQIOVHRV7HEC7KOCT6SQLM6HHPCOMDG233VLVXEDVREGLOXXKXYZ)                                                 |
+| SDK Rust                                                         | `soroban-sdk 28.0.0`                                                                                                                                                                 |
+| Stellar CLI                                                      | `28.1.0`                                                                                                                                                                             |
 
 El SHA-256 anterior fue comparado con el WASM local optimizado y con el hash
 publicado por Stellar Expert. La cuenta creator es pública; no se publica aquí
 ninguna private key/seed.
-
-## Registro SUCCESS histórico reportado
-
-Se reportó una invocación `SUCCESS` en ledger `4078095`:
-[ver ledger en Stellar Expert](https://stellar.expert/explorer/testnet/ledger/4078095).
-Ese ledger corresponde al 11 de agosto de 2026. La inspección pública de sus
-transacciones no encontró una llamada `register` al Contract ID actual, que se
-creó el 2 de octubre de 2026; la cifra `4078095` y su SUCCESS son una referencia
-histórica reportada, no la transacción del contrato de esta página. Sí se
-verificó después un `register` SUCCESS del contrato actual en ledger `4978095`,
-enlazado en la tabla anterior.
 
 ## Interfaz y propiedades
 

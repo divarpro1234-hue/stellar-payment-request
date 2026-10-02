@@ -86,15 +86,15 @@ Controles revisados:
 
 ## Pruebas manuales en Testnet
 
-Marcadas como aprobadas según lo informado por el solicitante; no se repitieron durante esta ejecución de QA. La referencia SUCCESS del ledger 4078095 es histórica: el ledger es anterior al Contract ID actual y sus invocaciones no incluyen `register` en ese contrato. Repetir el registro contra el ID actual antes de usarlo como evidencia del despliegue presente.
+Marcadas como aprobadas según lo informado por el solicitante; no se repitieron durante esta ejecución de QA.
 
-| Prueba                                                      | Estado                                           |
-| ----------------------------------------------------------- | ------------------------------------------------ |
-| Solicitud XLM sin memo                                      | Aprobada                                         |
-| Solicitud XLM con memo TEXT                                 | Aprobada                                         |
-| Solicitud duplicada devuelve la misma URI y huella          | Aprobada                                         |
-| Calculadora con CoinGecko real                              | Aprobada                                         |
-| Registro Soroban firmado con Freighter con estado `SUCCESS` | Aprobada; tx actual verificada en ledger 4978095 |
+| Prueba                                                           | Estado                                                                                                                                               |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Solicitud XLM sin memo                                           | Aprobada                                                                                                                                             |
+| Solicitud XLM con memo TEXT                                      | Aprobada                                                                                                                                             |
+| Solicitud duplicada devuelve la misma URI y huella               | Aprobada                                                                                                                                             |
+| Calculadora con CoinGecko real                                   | Aprobada                                                                                                                                             |
+| Registro de prueba con estado SUCCESS en Testnet, ledger 4978095 | Aprobada; [transacción `07c780…794ef5`](https://stellar.expert/explorer/testnet/tx/07c7805d72e545e9ff3f2bda9c874764024c59b5a50713dbb3d1d78cf9794ef5) |
 
 Pendientes de prueba manual:
 
