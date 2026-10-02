@@ -12,6 +12,7 @@ interface ErrorResponse {
   error: string;
   message: string | string[];
   code?: string;
+  rpcResultCode?: string;
   timestamp: string;
   path: string;
 }
@@ -20,6 +21,7 @@ interface NestErrorBody {
   error?: string;
   message?: string | string[];
   code?: string;
+  rpcResultCode?: string;
 }
 
 interface HttpRequest {
@@ -40,13 +42,26 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const request = context.getRequest<HttpRequest>();
     const response = context.getResponse<HttpResponse>();
     const isHttpException = exception instanceof HttpException;
+    const isUniqueConstraintError =
+      typeof exception === 'object' &&
+      exception !== null &&
+      'code' in exception &&
+      exception.code === 'P2002';
     const statusCode = isHttpException
       ? exception.getStatus()
-      : HttpStatus.INTERNAL_SERVER_ERROR;
+      : isUniqueConstraintError
+        ? HttpStatus.CONFLICT
+        : HttpStatus.INTERNAL_SERVER_ERROR;
     const body = isHttpException ? exception.getResponse() : undefined;
-    const normalized = this.normalizeBody(body, statusCode);
+    const normalized = isUniqueConstraintError
+      ? {
+          error: 'Conflict',
+          message: 'A resource with the same unique value already exists.',
+          code: 'UNIQUE_CONSTRAINT_VIOLATION',
+        }
+      : this.normalizeBody(body, statusCode);
 
-    if (!isHttpException) {
+    if (!isHttpException && !isUniqueConstraintError) {
       this.logger.error('Unhandled request error', exception);
     }
 
@@ -65,7 +80,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private normalizeBody(
     body: string | object | undefined,
     statusCode: number,
-  ): Pick<ErrorResponse, 'error' | 'message' | 'code'> {
+  ): Pick<ErrorResponse, 'error' | 'message' | 'code' | 'rpcResultCode'> {
     const fallbackError = HttpStatus[statusCode] ?? 'Internal Server Error';
 
     if (typeof body === 'string') {
@@ -78,6 +93,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
         error: nestBody.error ?? fallbackError,
         message: nestBody.message ?? fallbackError,
         ...(nestBody.code ? { code: nestBody.code } : {}),
+        ...(nestBody.rpcResultCode
+          ? { rpcResultCode: nestBody.rpcResultCode }
+          : {}),
       };
     }
 

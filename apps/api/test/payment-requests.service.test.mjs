@@ -6,14 +6,20 @@ import { PaymentRequestsService } from '../dist/payment-requests/payment-request
 const destination = 'GDWUSKGGFDI4FRXK5EBTRECZSVQSSWJHHJOGH6JWG3AUMFFMQ435DIAG';
 const issuer = 'GDFJHLAXAUMHA4OWPOB4P7YO72AQR2HMIUYFOXLXE2DZGM633K7HZDQP';
 
-function makeService({ trustlineResult, trustlineError } = {}) {
+function makeService({
+  trustlineResult,
+  trustlineError,
+  findUnique,
+  create,
+} = {}) {
   let savedData;
   const prisma = {
     paymentRequest: {
       create: async ({ data }) => {
         savedData = data;
-        return { id: 'request-id' };
+        return create ? create(data) : { id: 'request-id' };
       },
+      findUnique: async (args) => (findUnique ? findUnique(args) : null),
     },
   };
   const config = { get: (_name, fallback) => fallback };
@@ -68,6 +74,45 @@ test('stores only hashes and hashes the exact SEP-7 URI', async () => {
   assert.equal('destination' in saved, false);
   assert.equal('memo' in saved, false);
   assert.equal(response.requestId, 'request-id');
+  assert.equal(response.existing, false);
+});
+
+test('returns the same request id when creating an identical request twice', async () => {
+  let existingRequest;
+  const { service } = makeService({
+    findUnique: async () => existingRequest,
+    create: async () => {
+      existingRequest = { id: 'request-id' };
+      return existingRequest;
+    },
+  });
+  const first = await service.create(validRequest);
+  const second = await service.create(validRequest);
+
+  assert.equal(first.existing, false);
+  assert.equal(second.existing, true);
+  assert.equal(second.requestId, first.requestId);
+  assert.equal(second.uri, first.uri);
+  assert.equal(second.qrDataUrl, first.qrDataUrl);
+  assert.equal(second.requestHash, first.requestHash);
+});
+
+test('returns the existing request when create races on the unique hash', async () => {
+  const existingRequest = { id: 'raced-request-id' };
+  let lookupCount = 0;
+  const { service } = makeService({
+    findUnique: async () => {
+      lookupCount += 1;
+      return lookupCount === 1 ? null : existingRequest;
+    },
+    create: async () => {
+      throw { code: 'P2002' };
+    },
+  });
+  const response = await service.create(validRequest);
+
+  assert.equal(response.requestId, existingRequest.id);
+  assert.equal(response.existing, true);
 });
 
 test('warns about missing trustlines without changing the SEP-7 URI', async () => {

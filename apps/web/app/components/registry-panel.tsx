@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   Wallet,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ApiError, apiRequest } from '../lib/api';
 import { StatusMessage } from './status-message';
 import type { StatusKind } from './status-message';
@@ -70,6 +70,70 @@ export function RegistryPanel({ requestId }: { requestId: string }) {
   const [registration, setRegistration] =
     useState<SubmittedRegistration | null>(null);
   const [address, setAddress] = useState('');
+
+  useEffect(() => {
+    let active = true;
+
+    async function checkRegistration() {
+      setBusy(true);
+      setStatus({
+        kind: 'loading',
+        message: 'Consultando el registro en Soroban…',
+      });
+      try {
+        const result = await apiRequest<RegistryLookup>(
+          `/registry/${encodeURIComponent(requestId)}`,
+        );
+        if (!active) return;
+
+        const current = result.registration;
+        if (!current) {
+          setRegistration(null);
+          setStatus({
+            kind: 'warning',
+            message: 'Esta huella todavía no está registrada en Soroban.',
+          });
+          return;
+        }
+
+        setRegistration({
+          txHash: current.txHash ?? '',
+          status: current.status,
+          ledger: current.ledger ? Number(current.ledger) : null,
+        });
+        setStatus(
+          current.status === 'SUCCESS'
+            ? {
+                kind: 'success',
+                message: 'Huella registrada en Stellar Testnet.',
+              }
+            : current.status === 'PENDING'
+              ? {
+                  kind: 'warning',
+                  message: 'El registro de la huella está pendiente.',
+                }
+              : { kind: 'error', message: 'El registro de la huella falló.' },
+        );
+      } catch (error) {
+        if (active) {
+          setStatus({
+            kind: 'error',
+            message:
+              error instanceof ApiError
+                ? error.message
+                : 'No se pudo consultar el registro en Soroban.',
+          });
+        }
+      } finally {
+        if (active) setBusy(false);
+      }
+    }
+
+    void checkRegistration();
+    return () => {
+      active = false;
+    };
+  }, [requestId]);
 
   async function registerFingerprint() {
     setBusy(true);
@@ -211,7 +275,12 @@ export function RegistryPanel({ requestId }: { requestId: string }) {
             message: 'La transacción fue incluida, pero falló en Stellar.',
           });
         } else {
-          setStatus({ kind: 'error', message: error.message });
+          setStatus({
+            kind: 'error',
+            message: error.rpcResultCode
+              ? `${error.message} Código RPC: ${error.rpcResultCode}.`
+              : error.message,
+          });
         }
       } else if (wasRejected(error)) {
         setStatus({

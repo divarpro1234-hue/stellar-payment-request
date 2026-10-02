@@ -32,6 +32,7 @@ import { CreatePaymentRequestDto } from './create-payment-request.dto';
 
 interface PaymentRequestResponse {
   requestId: string;
+  existing: boolean;
   network: StellarNetwork;
   uri: string;
   qrDataUrl: string;
@@ -51,6 +52,15 @@ type PaymentRequestErrorCode =
 
 function sha256(value: string): string {
   return createHash('sha256').update(value, 'utf8').digest('hex');
+}
+
+function isUniqueConstraintError(error: unknown): error is { code: 'P2002' } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'P2002'
+  );
 }
 
 function badRequest(code: PaymentRequestErrorCode, message: string): never {
@@ -91,30 +101,76 @@ export class PaymentRequestsService {
       errorCorrectionLevel: 'M',
       type: 'image/png',
     });
-    const paymentRequest = await this.prisma.paymentRequest.create({
-      data: {
-        requestHash,
-        destinationHash,
-        assetCode: dto.assetCode,
-        assetIssuer: dto.assetIssuer ?? null,
-        amount: dto.amount,
-        memoType: dto.memoType ?? 'NONE',
-        memoHash,
-        network,
-        trustlineStatus: this.getTrustlineStatus(trustline),
-      },
+    const existingRequest = await this.prisma.paymentRequest.findUnique({
+      where: { requestHash },
       select: { id: true },
     });
+    if (existingRequest) {
+      return this.buildResponse(existingRequest.id, true, {
+        network,
+        uri,
+        qrDataUrl,
+        requestHash,
+        trustline,
+        warnings,
+      });
+    }
 
-    return {
-      requestId: paymentRequest.id,
+    let paymentRequest: { id: string };
+    try {
+      paymentRequest = await this.prisma.paymentRequest.create({
+        data: {
+          requestHash,
+          destinationHash,
+          assetCode: dto.assetCode,
+          assetIssuer: dto.assetIssuer ?? null,
+          amount: dto.amount,
+          memoType: dto.memoType ?? 'NONE',
+          memoHash,
+          network,
+          trustlineStatus: this.getTrustlineStatus(trustline),
+        },
+        select: { id: true },
+      });
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) {
+        throw error;
+      }
+
+      const racedRequest = await this.prisma.paymentRequest.findUnique({
+        where: { requestHash },
+        select: { id: true },
+      });
+      if (!racedRequest) {
+        throw error;
+      }
+
+      return this.buildResponse(racedRequest.id, true, {
+        network,
+        uri,
+        qrDataUrl,
+        requestHash,
+        trustline,
+        warnings,
+      });
+    }
+
+    return this.buildResponse(paymentRequest.id, false, {
       network,
       uri,
       qrDataUrl,
       requestHash,
       trustline,
       warnings,
-    };
+    });
+  }
+
+  private buildResponse(
+    requestId: string,
+    existing: boolean,
+    response: Omit<PaymentRequestResponse, 'requestId' | 'existing'>,
+  ): PaymentRequestResponse {
+    return { requestId, existing, ...response };
   }
 
   private async checkTrustline(dto: CreatePaymentRequestDto): Promise<{

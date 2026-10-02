@@ -24,6 +24,7 @@ import type { StatusKind } from '../../components/status-message';
 
 interface PaymentRequestResult {
   requestId: string;
+  existing: boolean;
   network: 'TESTNET' | 'PUBLIC';
   uri: string;
   qrDataUrl?: string;
@@ -102,9 +103,10 @@ export default function RequestPage() {
       setResult(response);
       setQrDataUrl(qr);
       setFeedback({
-        kind: 'success',
-        message:
-          'Solicitud creada. La URI mostrada es exactamente la que devolvió el backend.',
+        kind: response.existing ? 'warning' : 'success',
+        message: response.existing
+          ? 'Esta solicitud ya existía. Se muestra la misma URI y huella. Para generar un cobro distinto con los mismos datos, agrega un memo.'
+          : 'Solicitud creada. La URI mostrada es exactamente la que devolvió el backend.',
       });
     } catch (error) {
       if (error instanceof ApiError) {

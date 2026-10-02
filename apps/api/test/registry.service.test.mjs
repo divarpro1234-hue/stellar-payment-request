@@ -168,6 +168,31 @@ test('prepares an unsigned transaction for the stored request hash', async () =>
   ]);
 });
 
+test('prepares registration at the initial account sequence plus one after simulation', async () => {
+  const account = new Account(registrant, '41');
+  let existenceTransaction;
+  let registrationTransaction;
+  const rpcClient = makeRpcClient();
+  rpcClient.getAccount = async () => account;
+  rpcClient.getServer = () => ({
+    simulateTransaction: async (transaction) => {
+      existenceTransaction = transaction;
+      return { result: { retval: xdr.ScVal.scvBool(false) } };
+    },
+    prepareTransaction: async (transaction) => {
+      registrationTransaction = transaction;
+      return transaction;
+    },
+  });
+  const { service } = makeService({ rpcClient });
+
+  await service.prepare(request.id, registrant);
+
+  assert.equal(existenceTransaction.sequence, '42');
+  assert.equal(registrationTransaction.sequence, '42');
+  assert.equal(account.sequenceNumber(), '42');
+});
+
 test('rejects an invalid registrant before calling Soroban RPC', async () => {
   let rpcCalled = false;
   const { service } = makeService({
@@ -314,6 +339,26 @@ test('does not persist a TRY_AGAIN_LATER submission result', async () => {
     'SOROBAN_SUBMIT_FAILED',
     502,
   );
+  assert.deepEqual(writes, []);
+});
+
+test('returns the decoded RPC result code when Soroban rejects a submission', async () => {
+  const { service, writes } = makeService({
+    rpcOverrides: {
+      sendTransaction: async () => ({
+        status: 'ERROR',
+        hash: 'stellar-tx-hash',
+        errorResult: { result: { type: 'txBadSeq' } },
+      }),
+    },
+  });
+
+  await assert.rejects(service.submit(request.id, 'signed-xdr'), (error) => {
+    assert.equal(error.getStatus(), 502);
+    assert.equal(error.getResponse().code, 'SOROBAN_SUBMIT_FAILED');
+    assert.equal(error.getResponse().rpcResultCode, 'txBAD_SEQ');
+    return true;
+  });
   assert.deepEqual(writes, []);
 });
 

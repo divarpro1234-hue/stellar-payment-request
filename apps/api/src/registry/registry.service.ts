@@ -4,6 +4,7 @@ import {
   ConflictException,
   HttpException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { isValidStellarAccount } from '@stellar-payment-request/stellar-domain';
@@ -30,6 +31,8 @@ function codedError(
 
 @Injectable()
 export class RegistryService {
+  private readonly logger = new Logger(RegistryService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly sorobanRpc: SorobanRpcClient,
@@ -136,10 +139,26 @@ export class RegistryService {
       );
     }
 
-    if (
-      sendResult.status === 'ERROR' ||
-      sendResult.status === 'TRY_AGAIN_LATER'
-    ) {
+    if (sendResult.status === 'ERROR') {
+      const resultType = sendResult.errorResult?.result.type;
+      const rpcResultCode = resultType
+        ? `tx${resultType
+            .slice(2)
+            .replace(/[A-Z]/g, (letter) => `_${letter}`)
+            .replace(/^_/, '')
+            .toUpperCase()}`
+        : undefined;
+      this.logger.warn(
+        `Soroban RPC rejected registration: ${rpcResultCode ?? 'UNKNOWN'}`,
+      );
+      throw new BadGatewayException({
+        code: 'SOROBAN_SUBMIT_FAILED',
+        message: 'Soroban RPC could not accept the signed transaction.',
+        ...(rpcResultCode ? { rpcResultCode } : {}),
+      });
+    }
+
+    if (sendResult.status === 'TRY_AGAIN_LATER') {
       throw codedError(
         BadGatewayException,
         'SOROBAN_SUBMIT_FAILED',

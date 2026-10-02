@@ -8,6 +8,7 @@ export const API_BASE_URL = origin.endsWith('/api/v1')
 export interface ApiErrorBody {
   code?: string;
   message?: string | string[];
+  rpcResultCode?: string;
 }
 
 export class ApiError extends Error {
@@ -15,6 +16,7 @@ export class ApiError extends Error {
     public readonly status: number,
     public readonly code: string | undefined,
     message: string,
+    public readonly rpcResultCode?: string,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -49,7 +51,12 @@ export async function apiRequest<T>(
     const message = Array.isArray(error.message)
       ? error.message.join(' ')
       : (error.message ?? 'La solicitud no pudo completarse.');
-    throw new ApiError(response.status, error.code, message);
+    throw new ApiError(
+      response.status,
+      error.code,
+      message,
+      error.rpcResultCode,
+    );
   }
   return body as T;
 }

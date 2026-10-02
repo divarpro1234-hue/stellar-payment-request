@@ -80,7 +80,11 @@ export class SorobanRpcClient {
   }
 
   async isRegistered(account: Account, requestHash: string): Promise<boolean> {
-    const transaction = this.buildInvocation(account, 'exists', [
+    const simulationAccount = new Account(
+      account.accountId(),
+      account.sequenceNumber(),
+    );
+    const transaction = this.buildInvocation(simulationAccount, 'exists', [
       this.hashToScVal(requestHash),
     ]);
     const simulation = await this.getServer().simulateTransaction(transaction);
