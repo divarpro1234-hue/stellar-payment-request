@@ -9,11 +9,8 @@ no firma transacciones y no procesa ni garantiza pagos.
 
 | Integrante | Rol                      |
 | ---------- | ------------------------ |
-| Johnnathan | Integración técnica      |
-| Álvaro     | Integración técnica      |
 | Divar      | Integración técnica      |
-| Sebastián  | Diseño de flujo          |
-| Yojana     | Normativo y presentación |
+
 
 ## Stack
 
@@ -86,3 +83,15 @@ detalles del contrato.
 - Un hash es una huella determinista, no cifrado ni anonimización reversible.
 - La secret del deployer vive solo en el equipo del operador y nunca en el
   servidor, Vercel, variables de proyecto o repositorio.
+
+## ¿Qué es?
+Stellar Desk es una aplicación web académica que ayuda a crear solicitudes de pago
+para la red Stellar y a dejar una huella verificable de cada solicitud en una
+blockchain de pruebas (Testnet). No maneja dinero real, no guarda claves privadas
+y no procesa pagos.
+
+## Mi participación
+Desarrollé la implementación técnica del proyecto (frontend, API, base de datos y
+contrato en Rust) planificando la arquitectura y dirigiendo agentes de IA que
+generaron el código. [Si es cierto: Revisé, probé y ajusté el resultado.]
+Este proyecto fue realizado en equipo; los roles de cada integrante están abajo.
