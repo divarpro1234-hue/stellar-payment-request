@@ -93,5 +93,4 @@ y no procesa pagos.
 ## Mi participación
 Desarrollé la implementación técnica del proyecto (frontend, API, base de datos y
 contrato en Rust) planificando la arquitectura y dirigiendo agentes de IA que
-generaron el código. [Si es cierto: Revisé, probé y ajusté el resultado.]
-Este proyecto fue realizado en equipo; los roles de cada integrante están abajo.
+generaron el código.
